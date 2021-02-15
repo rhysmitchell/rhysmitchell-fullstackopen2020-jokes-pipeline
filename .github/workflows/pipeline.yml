@@ -1,0 +1,47 @@
+name: Deployment pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  simple_deployment_pipeline:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - name: npm install 
+        run: npm install  
+      - name: build
+        run: npm run build
+      - name: deploy
+        if: ${{ github.event_name == 'push' && env.SKIP == 'false' }}
+        uses: akhileshns/heroku-deploy@v3.9.9
+        env:
+          SKIP: ${{ contains( join( github.event.commits.*.message, ',' ), '#skip' ) }}
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "some-jokes"
+          heroku_email: "rhys.mitchell92@googlemail.com"
+          healthcheck: "https://some-jokes.herokuapp.com/health"
+          checkstring: "ok"
+          rollbackonhealthcheckfailed: true
+      - uses: actions/checkout@v2
+      - name: Bump version and push tag
+        if: ${{ github.event_name == 'push' && env.SKIP == 'false' }}
+        uses: anothrNick/github-tag-action@1.33.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+          SKIP: ${{ contains( join( github.event.commits.*.message, ',' ), '#skip' ) }}
+      - uses: 8398a7/action-slack@v3
+        if: ${{ github.event_name == 'push' && ( success() || failure() ) }}
+        with:
+          status: ${{ job.status }}
+          fields: message,commit,action,eventName,ref,workflow,job,took        

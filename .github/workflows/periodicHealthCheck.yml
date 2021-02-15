@@ -1,0 +1,14 @@
+name: Periodic Health Check
+
+on:
+  schedule:
+    - cron: 0 7 * * *
+
+jobs:
+  health_check:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Check 'some-jokes' is working
+        uses: jtalk/url-health-check-action@v1.2
+        with:
+          url: https://some-jokes.herokuapp.com/health
