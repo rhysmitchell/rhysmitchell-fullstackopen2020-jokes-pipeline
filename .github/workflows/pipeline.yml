@@ -32,8 +32,8 @@ jobs:
           healthcheck: "https://some-jokes.herokuapp.com/health"
           checkstring: "ok"
           rollbackonhealthcheckfailed: true
-          branch: main
-          remote_branch: main
+          branch: "main"
+          remote_branch: "main"
       - uses: actions/checkout@v2
       - name: Bump version and push tag
         if: ${{ github.event_name == 'push' && env.SKIP == 'false' }}
